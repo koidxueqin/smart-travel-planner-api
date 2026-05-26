@@ -6,4 +6,11 @@ const router = express.Router();
 // Create a new trip
 router.post("/", tripController.createTrip);
 
+// Get all trips
+router.get("/", tripController.getAllTrips);
+
+// Get one trip by ID
+router.get("/:id", tripController.getTripById);
+
+
 module.exports = router;
