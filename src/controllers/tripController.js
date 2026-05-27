@@ -1,4 +1,8 @@
-const { createTripSchema } = require("../validators/tripValidator");
+const {
+  createTripSchema,
+  updateTripSchema
+} = require("../validators/tripValidator");
+
 const tripService = require("../services/tripService");
 
 // Handles POST /api/v1/trips
@@ -67,8 +71,46 @@ async function getTripById(req, res, next) {
   }
 }
 
+// Handles PUT /api/v1/trips/:id
+async function updateTrip(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+
+    // Check if ID is valid
+    if (!Number.isInteger(id) || id <= 0) {
+      const error = new Error("Trip ID must be a positive number");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Check if trip exists first
+    const existingTrip = await tripService.getTripById(id);
+
+    if (!existingTrip) {
+      const error = new Error("Trip not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Validate request body
+    const validatedData = updateTripSchema.parse(req.body);
+
+    // Update trip in database
+    const updatedTrip = await tripService.updateTrip(id, validatedData);
+
+    res.status(200).json({
+      success: true,
+      message: "Trip updated successfully",
+      data: updatedTrip
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createTrip,
   getAllTrips,
-  getTripById
+  getTripById,
+  updateTrip
 };

@@ -12,5 +12,7 @@ router.get("/", tripController.getAllTrips);
 // Get one trip by ID
 router.get("/:id", tripController.getTripById);
 
+// Update one trip by ID
+router.put("/:id", tripController.updateTrip);
 
 module.exports = router;

@@ -97,8 +97,58 @@ async function getTripById(id) {
   return trip;
 }
 
+// Update one trip by ID
+async function updateTrip(id, tripData) {
+  const db = await connectDatabase();
+
+  await db.run(
+    `
+    UPDATE trips
+    SET
+      destination = ?,
+      country = ?,
+      start_date = ?,
+      end_date = ?,
+      notes = ?,
+      preferences = ?,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+    `,
+    [
+      tripData.destination,
+      tripData.country,
+      tripData.startDate,
+      tripData.endDate,
+      tripData.notes,
+      tripData.preferences,
+      id
+    ]
+  );
+
+  const updatedTrip = await db.get(
+    `
+    SELECT
+      id,
+      destination,
+      country,
+      start_date AS startDate,
+      end_date AS endDate,
+      notes,
+      preferences,
+      created_at AS createdAt,
+      updated_at AS updatedAt
+    FROM trips
+    WHERE id = ?
+    `,
+    [id]
+  );
+
+  return updatedTrip;
+}
+
 module.exports = {
   createTrip,
   getAllTrips,
-  getTripById
+  getTripById,
+  updateTrip
 };

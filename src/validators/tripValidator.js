@@ -42,6 +42,37 @@ const createTripSchema = z.object({
     .default("")
 });
 
+// Validation rules for updating a trip
+const updateTripSchema = z.object({
+  destination: z
+    .string()
+    .trim()
+    .min(1, "Destination is required"),
+
+  country: z
+    .string()
+    .trim()
+    .optional()
+    .default(""),
+
+  startDate: optionalDate,
+
+  endDate: optionalDate,
+
+  notes: z
+    .string()
+    .trim()
+    .optional()
+    .default(""),
+
+  preferences: z
+    .string()
+    .trim()
+    .optional()
+    .default("")
+});
+
 module.exports = {
-  createTripSchema
+  createTripSchema,
+  updateTripSchema
 };
