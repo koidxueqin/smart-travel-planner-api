@@ -4,6 +4,7 @@ const {
 } = require("../validators/tripValidator");
 
 const tripService = require("../services/tripService");
+const { success } = require("zod");
 
 // Handles POST /api/v1/trips
 async function createTrip(req, res, next) {
@@ -108,9 +109,44 @@ async function updateTrip(req, res, next) {
   }
 }
 
+// Handles DELETE /api/v1/trips/:id
+async function deleteTrip(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+
+    // Check if ID is valid
+    if (!Number.isInteger(id) || id <= 0) {
+      const error = new Error("Trip ID must be a positive number");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Check if trip exists first
+    const existingTrip = await tripService.getTripById(id);
+
+    if (!existingTrip) {
+      const error = new Error("Trip not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Delete trip from database
+    await tripService.deleteTrip(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Trip deleted successfully",
+      data: existingTrip
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   createTrip,
   getAllTrips,
   getTripById,
-  updateTrip
+  updateTrip,
+  deleteTrip
 };

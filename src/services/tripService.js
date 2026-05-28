@@ -146,9 +146,25 @@ async function updateTrip(id, tripData) {
   return updatedTrip;
 }
 
+// Delete one trip by ID
+async function deleteTrip(id) {
+  const db = await connectDatabase();
+
+  await db.run(
+    `
+    DELETE FROM trips
+    WHERE id = ?
+    `,
+    [id]
+  );
+
+  return true;
+}
+
 module.exports = {
   createTrip,
   getAllTrips,
   getTripById,
-  updateTrip
+  updateTrip,
+  deleteTrip
 };
