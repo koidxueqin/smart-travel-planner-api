@@ -1,6 +1,7 @@
 const sqlite3 = require("sqlite3").verbose();
 const { open } = require("sqlite");
 const path = require("path");
+const fs = require("fs");
 
 let db;
 
@@ -9,8 +10,14 @@ async function connectDatabase() {
     return db;
   }
 
+  const dataDir = path.join(__dirname, "../../data");
+  const databasePath = path.join(dataDir, "travel.db");
+
+  // Create data folder automatically if it does not exist
+  await fs.promises.mkdir(dataDir, { recursive: true });
+
   db = await open({
-    filename: path.join(__dirname, "../../data/travel.db"),
+    filename: databasePath,
     driver: sqlite3.Database
   });
 
