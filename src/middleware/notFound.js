@@ -1,8 +1,7 @@
+const AppError = require("../utils/AppError");
+
 function notFound(req, res, next) {
-  res.status(404).json({
-    success: false,
-    message: "Route not found"
-  });
+  next(new AppError(`Route ${req.originalUrl} not found`, 404));
 }
 
 module.exports = notFound;

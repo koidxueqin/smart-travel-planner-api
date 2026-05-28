@@ -13,13 +13,15 @@ function errorHandler(error, req, res, next) {
     });
   }
 
-  // Shows real error in terminal for developer
-  console.error(error);
-
-  // Use custom status code if controller provides one
+  // Use custom status code if provided
   const statusCode = error.statusCode || error.status || 500;
 
-  // Hide message only for real server errors
+  // Only log unexpected server errors
+  if (statusCode === 500) {
+    console.error(error);
+  }
+
+  // Hide real server error details from the user
   const message =
     statusCode === 500
       ? "Something went wrong on the server"
@@ -27,7 +29,7 @@ function errorHandler(error, req, res, next) {
 
   return res.status(statusCode).json({
     success: false,
-    message: message
+    message
   });
 }
 

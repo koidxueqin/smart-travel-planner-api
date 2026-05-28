@@ -4,7 +4,7 @@ const {
 } = require("../validators/tripValidator");
 
 const tripService = require("../services/tripService");
-const { success } = require("zod");
+const AppError = require("../utils/AppError");
 
 // Handles POST /api/v1/trips
 async function createTrip(req, res, next) {
@@ -48,18 +48,14 @@ async function getTripById(req, res, next) {
 
     // Check if ID is valid
     if (!Number.isInteger(id) || id <= 0) {
-      const error = new Error("Trip ID must be a positive number");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Trip ID must be a positive number", 400);
     }
 
     const trip = await tripService.getTripById(id);
 
     // If no trip is found
     if (!trip) {
-      const error = new Error("Trip not found");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Trip not found", 404);
     }
 
     res.status(200).json({
@@ -79,18 +75,14 @@ async function updateTrip(req, res, next) {
 
     // Check if ID is valid
     if (!Number.isInteger(id) || id <= 0) {
-      const error = new Error("Trip ID must be a positive number");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Trip ID must be a positive number", 400);
     }
 
     // Check if trip exists first
     const existingTrip = await tripService.getTripById(id);
 
     if (!existingTrip) {
-      const error = new Error("Trip not found");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Trip not found", 404);
     }
 
     // Validate request body
@@ -116,18 +108,14 @@ async function deleteTrip(req, res, next) {
 
     // Check if ID is valid
     if (!Number.isInteger(id) || id <= 0) {
-      const error = new Error("Trip ID must be a positive number");
-      error.statusCode = 400;
-      throw error;
+      throw new AppError("Trip ID must be a positive number", 400);
     }
 
     // Check if trip exists first
     const existingTrip = await tripService.getTripById(id);
 
     if (!existingTrip) {
-      const error = new Error("Trip not found");
-      error.statusCode = 404;
-      throw error;
+      throw new AppError("Trip not found", 404);
     }
 
     // Delete trip from database
