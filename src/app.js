@@ -7,6 +7,7 @@ const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 
 const tripRoutes = require("./routes/tripRoutes");
+const weatherRoutes = require("./routes/weatherRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -55,6 +56,9 @@ app.get("/", (req, res) => {
 
 // Trip routes
 app.use("/api/v1/trips", tripRoutes);
+
+// Weather routes
+app.use("/api/v1/weather", weatherRoutes);
 
 // Handles wrong routes
 app.use(notFound);
