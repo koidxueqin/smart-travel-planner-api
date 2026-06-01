@@ -1,4 +1,6 @@
 const connectDatabase = require("../config/database");
+const weatherService = require("./weatherService");
+const AppError = require("../utils/AppError");
 
 // Saves a new trip into SQLite
 async function createTrip(tripData) {
@@ -97,6 +99,22 @@ async function getTripById(id) {
   return trip;
 }
 
+// Get Trip wtih Weather by ID
+async function getTripWithWeather(id) {
+  const trip = await getTripById(id);
+
+  if (!trip) {
+    throw new AppError("Trip not found", 404);
+  }
+
+  const weather = await weatherService.getWeatherByCity(trip.destination);
+
+  return {
+    trip, 
+    weather
+  };
+}
+
 // Update one trip by ID
 async function updateTrip(id, tripData) {
   const db = await connectDatabase();
@@ -166,5 +184,6 @@ module.exports = {
   getAllTrips,
   getTripById,
   updateTrip,
-  deleteTrip
+  deleteTrip,
+  getTripWithWeather
 };

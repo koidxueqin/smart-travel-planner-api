@@ -9,6 +9,9 @@ router.post("/", tripController.createTrip);
 // Get all trips
 router.get("/", tripController.getAllTrips);
 
+// Get trip with weather by ID
+router.get("/:id/weather", tripController.getTripWithWeather);
+
 // Get one trip by ID
 router.get("/:id", tripController.getTripById);
 

@@ -5,6 +5,7 @@ const {
 
 const tripService = require("../services/tripService");
 const AppError = require("../utils/AppError");
+const { success } = require("zod");
 
 // Handles POST /api/v1/trips
 async function createTrip(req, res, next) {
@@ -62,6 +63,26 @@ async function getTripById(req, res, next) {
       success: true,
       message: "Trip retrieved successfully",
       data: trip
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getTripWithWeather(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <=0) {
+      throw new AppError("Invalid trip ID", 400);
+    }
+
+    const getTripWithWeather = await tripService.getTripWithWeather(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Trip with weather fetched successfully",
+      data: getTripWithWeather
     });
   } catch (error) {
     next(error);
@@ -136,5 +157,6 @@ module.exports = {
   getAllTrips,
   getTripById,
   updateTrip,
-  deleteTrip
+  deleteTrip,
+  getTripWithWeather
 };
