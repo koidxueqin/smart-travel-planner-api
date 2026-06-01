@@ -19,8 +19,8 @@ app.use(helmet());
 // Allows API access from tools like Postman
 app.use(cors());
 
-// Allows Express to read JSON request bodies
-app.use(express.json());
+// Allows Express to read JSON request bodies with asasfe size limit
+app.use(express.json({ limit: "10kb"}));
 
 // Logs requests in the terminal
 app.use(morgan("dev"));
@@ -29,9 +29,13 @@ app.use(morgan("dev"));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: {
-    success: false,
-    message: "Too many requests. Please try again later."
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    return res.status(429).json({
+      success: false,
+      message: "Too many requests, please try again later"
+    });
   }
 });
 

@@ -1,4 +1,4 @@
-const { ZodError } = require("zod");
+const { ZodError, success } = require("zod");
 
 function errorHandler(error, req, res, next) {
   // Handles validation errors from Zod
@@ -10,6 +10,22 @@ function errorHandler(error, req, res, next) {
         field: issue.path.join("."),
         message: issue.message
       }))
+    });
+  }
+
+  // Handles invalid JSON request body
+  if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid JSON format"
+    });
+  }
+
+  // Handles request body that is too large
+  if (error.type === "entity.too.large") {
+    return res.status(413).json({
+      success: false,
+      message: "Request body is too large"
     });
   }
 
