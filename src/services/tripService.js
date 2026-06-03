@@ -2,6 +2,9 @@ const connectDatabase = require("../config/database");
 const weatherService = require("./weatherService");
 const AppError = require("../utils/AppError");
 
+// Temporary user before real authenticated user logic later
+const DEFAULT_USER_ID = 1;
+
 // Saves a new trip into SQLite
 async function createTrip(tripData) {
   const db = await connectDatabase();
@@ -9,6 +12,7 @@ async function createTrip(tripData) {
   const result = await db.run(
     `
     INSERT INTO trips (
+      user_id,
       destination,
       country,
       start_date,
@@ -16,9 +20,10 @@ async function createTrip(tripData) {
       notes,
       preferences
     )
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
     [
+      DEFAULT_USER_ID,
       tripData.destination,
       tripData.country,
       tripData.startDate,
@@ -33,6 +38,7 @@ async function createTrip(tripData) {
     `
     SELECT
       id,
+      user_id AS userId,
       destination,
       country,
       start_date AS startDate,
@@ -58,6 +64,7 @@ async function getAllTrips() {
     `
     SELECT
       id,
+      user_id AS userId,
       destination,
       country,
       start_date AS startDate,
@@ -82,6 +89,7 @@ async function getTripById(id) {
     `
     SELECT
       id,
+      user_id AS userId,
       destination,
       country,
       start_date AS startDate,
@@ -99,7 +107,7 @@ async function getTripById(id) {
   return trip;
 }
 
-// Get Trip wtih Weather by ID
+// Get trip with weather by ID
 async function getTripWithWeather(id) {
   const trip = await getTripById(id);
 
@@ -110,7 +118,7 @@ async function getTripWithWeather(id) {
   const weather = await weatherService.getWeatherByCity(trip.destination);
 
   return {
-    trip, 
+    trip,
     weather
   };
 }
@@ -147,6 +155,7 @@ async function updateTrip(id, tripData) {
     `
     SELECT
       id,
+      user_id AS userId,
       destination,
       country,
       start_date AS startDate,
