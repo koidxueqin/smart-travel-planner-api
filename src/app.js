@@ -8,6 +8,7 @@ const morgan = require("morgan");
 
 const tripRoutes = require("./routes/tripRoutes");
 const weatherRoutes = require("./routes/weatherRoutes");
+const authRoutes = require("./routes/authRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -57,6 +58,9 @@ app.get("/", (req, res) => {
     message: "Welcome to Smart Travel Planner API"
   });
 });
+
+// Auth routes
+app.use("/api/v1/auth", authRoutes);
 
 // Trip routes
 app.use("/api/v1/trips", tripRoutes);
