@@ -1,4 +1,4 @@
-const { ZodError, success } = require("zod");
+const { ZodError } = require("zod");
 
 function errorHandler(error, req, res, next) {
   // Handles validation errors from Zod
