@@ -43,28 +43,6 @@ async function connectDatabase() {
     )
   `);
 
-  // Temporary default user for Day 13
-  // This keeps existing trip CRUD working before authentication is added
-  await db.run(
-    `
-    INSERT OR IGNORE INTO users (
-      id,
-      name,
-      email,
-      password_hash,
-      role
-    )
-    VALUES (?, ?, ?, ?, ?)
-    `,
-    [
-      1,
-      "Default User",
-      "default@example.com",
-      "temporary-password-hash",
-      "user"
-    ]
-  );
-
   // Create trips table for new databases
   await db.exec(`
     CREATE TABLE IF NOT EXISTS trips (
@@ -82,8 +60,7 @@ async function connectDatabase() {
     )
   `);
 
-  // Safe migration for existing databases
-  // If trips table already existed before Day 13, add user_id only if missing
+  // add user_id only if missing
   const hasUserIdColumn = await columnExists(db, "trips", "user_id");
 
   if (!hasUserIdColumn) {
@@ -92,13 +69,6 @@ async function connectDatabase() {
       ADD COLUMN user_id INTEGER REFERENCES users(id)
     `);
   }
-
-  // Attach old trips to the temporary default user
-  await db.run(`
-    UPDATE trips
-    SET user_id = 1
-    WHERE user_id IS NULL
-  `);
 
   console.log("SQLite database connected");
 

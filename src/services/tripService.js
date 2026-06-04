@@ -1,6 +1,7 @@
 const connectDatabase = require("../config/database");
 const weatherService = require("./weatherService");
 const AppError = require("../utils/AppError");
+const { buildTravelSummary } = require("../utils/weatherAdvice");
 
 // Saves a new trip into SQLite for the logged-in user
 async function createTrip(tripData, userId) {
@@ -117,7 +118,7 @@ async function getTripById(id) {
   return trip;
 }
 
-// Get trip with weather by ID, only if it belongs to the user
+// Get trip with weather and travel summary by ID, only if it belongs to the user
 async function getTripWithWeather(id, userId) {
   const trip = await getTripById(id);
 
@@ -130,10 +131,12 @@ async function getTripWithWeather(id, userId) {
   }
 
   const weather = await weatherService.getWeatherByCity(trip.destination);
+  const travelSummary = buildTravelSummary(weather);
 
   return {
     trip,
-    weather
+    weather,
+    travelSummary
   };
 }
 
