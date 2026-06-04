@@ -11,27 +11,30 @@ async function columnExists(database, tableName, columnName) {
   return columns.some((column) => column.name === columnName);
 }
 
-async function connectDatabase() {
-  if (db) {
-    return db;
+function getDatabaseFileName() {
+  if (process.env.NODE_ENV === "test") {
+    return "travel_test.db";
   }
 
+  return "travel.db";
+}
+
+function getDatabasePath() {
   const dataDir = path.join(__dirname, "../../data");
-  const databasePath = path.join(dataDir, "travel.db");
+  const databasePath = path.join(dataDir, getDatabaseFileName());
 
-  // Create data folder automatically if it does not exist
-  await fs.promises.mkdir(dataDir, { recursive: true });
+  return {
+    dataDir,
+    databasePath
+  };
+}
 
-  db = await open({
-    filename: databasePath,
-    driver: sqlite3.Database
-  });
-
+async function createTables(database) {
   // Enable SQLite foreign key support
-  await db.exec("PRAGMA foreign_keys = ON");
+  await database.exec("PRAGMA foreign_keys = ON");
 
   // Create users table
-  await db.exec(`
+  await database.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -43,8 +46,8 @@ async function connectDatabase() {
     )
   `);
 
-  // Create trips table for new databases
-  await db.exec(`
+  // Create trips table
+  await database.exec(`
     CREATE TABLE IF NOT EXISTS trips (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER,
@@ -60,19 +63,59 @@ async function connectDatabase() {
     )
   `);
 
-  // add user_id only if missing
-  const hasUserIdColumn = await columnExists(db, "trips", "user_id");
+  // Add user_id only if missing in older databases
+  const hasUserIdColumn = await columnExists(database, "trips", "user_id");
 
   if (!hasUserIdColumn) {
-    await db.exec(`
+    await database.exec(`
       ALTER TABLE trips
       ADD COLUMN user_id INTEGER REFERENCES users(id)
     `);
   }
+}
 
-  console.log("SQLite database connected");
+async function connectDatabase() {
+  if (db) {
+    return db;
+  }
+
+  const { dataDir, databasePath } = getDatabasePath();
+
+  // Create data folder automatically if it does not exist
+  await fs.promises.mkdir(dataDir, { recursive: true });
+
+  db = await open({
+    filename: databasePath,
+    driver: sqlite3.Database
+  });
+
+  await createTables(db);
+
+  if (process.env.NODE_ENV !== "test") {
+    console.log("SQLite database connected");
+  }
 
   return db;
 }
 
+async function clearDatabase() {
+  const database = await connectDatabase();
+
+  await database.exec(`
+    DELETE FROM trips;
+    DELETE FROM users;
+    DELETE FROM sqlite_sequence WHERE name IN ('trips', 'users');
+  `);
+}
+
+async function closeDatabase() {
+  if (db) {
+    await db.close();
+    db = null;
+  }
+}
+
 module.exports = connectDatabase;
+module.exports.clearDatabase = clearDatabase;
+module.exports.closeDatabase = closeDatabase;
+module.exports.getDatabasePath = getDatabasePath;

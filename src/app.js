@@ -25,7 +25,9 @@ app.use(cors());
 app.use(express.json({ limit: "10kb"}));
 
 // Logs requests in the terminal
-app.use(morgan("dev"));
+if (process.env.NODE_ENV !== "test") {
+  app.use(morgan("dev"));
+}
 
 // Limits repeated requests
 const limiter = rateLimit({
@@ -41,7 +43,9 @@ const limiter = rateLimit({
   }
 });
 
-app.use(limiter);
+if (process.env.NODE_ENV !== "test") {
+  app.use(limiter);
+}
 
 // Health check route
 app.get("/health", (req, res) => {
