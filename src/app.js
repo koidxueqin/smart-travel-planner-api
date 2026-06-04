@@ -9,6 +9,7 @@ const morgan = require("morgan");
 const tripRoutes = require("./routes/tripRoutes");
 const weatherRoutes = require("./routes/weatherRoutes");
 const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -61,6 +62,9 @@ app.get("/", (req, res) => {
 
 // Auth routes
 app.use("/api/v1/auth", authRoutes);
+
+// Admin routes
+app.use("/api/v1/admin", adminRoutes);
 
 // Trip routes
 app.use("/api/v1/trips", tripRoutes);

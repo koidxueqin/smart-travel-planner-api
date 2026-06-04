@@ -6,14 +6,28 @@ const {
 const tripService = require("../services/tripService");
 const AppError = require("../utils/AppError");
 
+function validateTripId(id) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new AppError("Trip ID must be a positive number", 400);
+  }
+}
+
+function checkTripOwnership(trip, userId) {
+  if (!trip) {
+    throw new AppError("Trip not found", 404);
+  }
+
+  if (trip.userId !== userId) {
+    throw new AppError("Access denied", 403);
+  }
+}
+
 // Handles POST /api/v1/trips
 async function createTrip(req, res, next) {
   try {
-    // Validate request body
     const validatedData = createTripSchema.parse(req.body);
 
-    // Save trip into database
-    const newTrip = await tripService.createTrip(validatedData);
+    const newTrip = await tripService.createTrip(validatedData, req.user.id);
 
     res.status(201).json({
       success: true,
@@ -28,7 +42,7 @@ async function createTrip(req, res, next) {
 // Handles GET /api/v1/trips
 async function getAllTrips(req, res, next) {
   try {
-    const trips = await tripService.getAllTrips();
+    const trips = await tripService.getAllTrips(req.user.id);
 
     res.status(200).json({
       success: true,
@@ -46,17 +60,11 @@ async function getTripById(req, res, next) {
   try {
     const id = Number(req.params.id);
 
-    // Check if ID is valid
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new AppError("Trip ID must be a positive number", 400);
-    }
+    validateTripId(id);
 
     const trip = await tripService.getTripById(id);
 
-    // If no trip is found
-    if (!trip) {
-      throw new AppError("Trip not found", 404);
-    }
+    checkTripOwnership(trip, req.user.id);
 
     res.status(200).json({
       success: true,
@@ -68,17 +76,19 @@ async function getTripById(req, res, next) {
   }
 }
 
+// Handles GET /api/v1/trips/:id/weather
 async function getTripWithWeather(req, res, next) {
   try {
     const id = Number(req.params.id);
 
-    if (!Number.isInteger(id) || id <=0) {
-      throw new AppError("Trip ID must be a positive number", 400);
-    }
+    validateTripId(id);
 
-    const tripWithWeather = await tripService.getTripWithWeather(id);
+    const tripWithWeather = await tripService.getTripWithWeather(
+      id,
+      req.user.id
+    );
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "Trip with weather fetched successfully",
       data: tripWithWeather
@@ -93,23 +103,19 @@ async function updateTrip(req, res, next) {
   try {
     const id = Number(req.params.id);
 
-    // Check if ID is valid
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new AppError("Trip ID must be a positive number", 400);
-    }
+    validateTripId(id);
 
-    // Check if trip exists first
     const existingTrip = await tripService.getTripById(id);
 
-    if (!existingTrip) {
-      throw new AppError("Trip not found", 404);
-    }
+    checkTripOwnership(existingTrip, req.user.id);
 
-    // Validate request body
     const validatedData = updateTripSchema.parse(req.body);
 
-    // Update trip in database
-    const updatedTrip = await tripService.updateTrip(id, validatedData);
+    const updatedTrip = await tripService.updateTrip(
+      id,
+      validatedData,
+      req.user.id
+    );
 
     res.status(200).json({
       success: true,
@@ -126,20 +132,13 @@ async function deleteTrip(req, res, next) {
   try {
     const id = Number(req.params.id);
 
-    // Check if ID is valid
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new AppError("Trip ID must be a positive number", 400);
-    }
+    validateTripId(id);
 
-    // Check if trip exists first
     const existingTrip = await tripService.getTripById(id);
 
-    if (!existingTrip) {
-      throw new AppError("Trip not found", 404);
-    }
+    checkTripOwnership(existingTrip, req.user.id);
 
-    // Delete trip from database
-    await tripService.deleteTrip(id);
+    await tripService.deleteTrip(id, req.user.id);
 
     res.status(200).json({
       success: true,

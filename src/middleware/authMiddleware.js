@@ -8,13 +8,13 @@ async function authenticate(req, res, next) {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new AppError("Authorization token is required", 401);
+      throw new AppError("Authentication required", 401);
     }
 
     const token = authHeader.split(" ")[1];
 
     if (!token) {
-      throw new AppError("Authorization token is required", 401);
+      throw new AppError("Authentication required", 401);
     }
 
     if (!process.env.JWT_SECRET) {
@@ -26,7 +26,7 @@ async function authenticate(req, res, next) {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
-      throw new AppError("Invalid or expired token", 401);
+      throw new AppError("Authentication required", 401);
     }
 
     const db = await connectDatabase();
@@ -47,7 +47,7 @@ async function authenticate(req, res, next) {
     );
 
     if (!user) {
-      throw new AppError("Invalid or expired token", 401);
+      throw new AppError("Authentication required", 401);
     }
 
     req.user = user;

@@ -2,11 +2,8 @@ const connectDatabase = require("../config/database");
 const weatherService = require("./weatherService");
 const AppError = require("../utils/AppError");
 
-// Temporary user before real authenticated user logic later
-const DEFAULT_USER_ID = 1;
-
-// Saves a new trip into SQLite
-async function createTrip(tripData) {
+// Saves a new trip into SQLite for the logged-in user
+async function createTrip(tripData, userId) {
   const db = await connectDatabase();
 
   const result = await db.run(
@@ -23,7 +20,7 @@ async function createTrip(tripData) {
     VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
     [
-      DEFAULT_USER_ID,
+      userId,
       tripData.destination,
       tripData.country,
       tripData.startDate,
@@ -33,31 +30,13 @@ async function createTrip(tripData) {
     ]
   );
 
-  // Return the newly created trip
-  const newTrip = await db.get(
-    `
-    SELECT
-      id,
-      user_id AS userId,
-      destination,
-      country,
-      start_date AS startDate,
-      end_date AS endDate,
-      notes,
-      preferences,
-      created_at AS createdAt,
-      updated_at AS updatedAt
-    FROM trips
-    WHERE id = ?
-    `,
-    [result.lastID]
-  );
+  const newTrip = await getTripById(result.lastID);
 
   return newTrip;
 }
 
-// Get all trips from the database
-async function getAllTrips() {
+// Get all trips belonging to one user
+async function getAllTrips(userId) {
   const db = await connectDatabase();
 
   const trips = await db.all(
@@ -74,14 +53,45 @@ async function getAllTrips() {
       created_at AS createdAt,
       updated_at AS updatedAt
     FROM trips
+    WHERE user_id = ?
     ORDER BY id DESC
+    `,
+    [userId]
+  );
+
+  return trips;
+}
+
+// Admin only: get all trips from all users
+async function getAllTripsForAdmin() {
+  const db = await connectDatabase();
+
+  const trips = await db.all(
+    `
+    SELECT
+      trips.id,
+      trips.user_id AS userId,
+      users.name AS userName,
+      users.email AS userEmail,
+      users.role AS userRole,
+      trips.destination,
+      trips.country,
+      trips.start_date AS startDate,
+      trips.end_date AS endDate,
+      trips.notes,
+      trips.preferences,
+      trips.created_at AS createdAt,
+      trips.updated_at AS updatedAt
+    FROM trips
+    LEFT JOIN users ON trips.user_id = users.id
+    ORDER BY trips.id DESC
     `
   );
 
   return trips;
 }
 
-// Get one trip by ID from the database
+// Get one trip by ID
 async function getTripById(id) {
   const db = await connectDatabase();
 
@@ -107,12 +117,16 @@ async function getTripById(id) {
   return trip;
 }
 
-// Get trip with weather by ID
-async function getTripWithWeather(id) {
+// Get trip with weather by ID, only if it belongs to the user
+async function getTripWithWeather(id, userId) {
   const trip = await getTripById(id);
 
   if (!trip) {
     throw new AppError("Trip not found", 404);
+  }
+
+  if (trip.userId !== userId) {
+    throw new AppError("Access denied", 403);
   }
 
   const weather = await weatherService.getWeatherByCity(trip.destination);
@@ -123,11 +137,11 @@ async function getTripWithWeather(id) {
   };
 }
 
-// Update one trip by ID
-async function updateTrip(id, tripData) {
+// Update one trip by ID, only if it belongs to the user
+async function updateTrip(id, tripData, userId) {
   const db = await connectDatabase();
 
-  await db.run(
+  const result = await db.run(
     `
     UPDATE trips
     SET
@@ -138,7 +152,7 @@ async function updateTrip(id, tripData) {
       notes = ?,
       preferences = ?,
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
+    WHERE id = ? AND user_id = ?
     `,
     [
       tripData.destination,
@@ -147,43 +161,35 @@ async function updateTrip(id, tripData) {
       tripData.endDate,
       tripData.notes,
       tripData.preferences,
-      id
+      id,
+      userId
     ]
   );
 
-  const updatedTrip = await db.get(
-    `
-    SELECT
-      id,
-      user_id AS userId,
-      destination,
-      country,
-      start_date AS startDate,
-      end_date AS endDate,
-      notes,
-      preferences,
-      created_at AS createdAt,
-      updated_at AS updatedAt
-    FROM trips
-    WHERE id = ?
-    `,
-    [id]
-  );
+  if (result.changes === 0) {
+    throw new AppError("Access denied", 403);
+  }
+
+  const updatedTrip = await getTripById(id);
 
   return updatedTrip;
 }
 
-// Delete one trip by ID
-async function deleteTrip(id) {
+// Delete one trip by ID, only if it belongs to the user
+async function deleteTrip(id, userId) {
   const db = await connectDatabase();
 
-  await db.run(
+  const result = await db.run(
     `
     DELETE FROM trips
-    WHERE id = ?
+    WHERE id = ? AND user_id = ?
     `,
-    [id]
+    [id, userId]
   );
+
+  if (result.changes === 0) {
+    throw new AppError("Access denied", 403);
+  }
 
   return true;
 }
@@ -191,6 +197,7 @@ async function deleteTrip(id) {
 module.exports = {
   createTrip,
   getAllTrips,
+  getAllTripsForAdmin,
   getTripById,
   updateTrip,
   deleteTrip,
