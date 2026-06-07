@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("../src/app");
 
+// Create a unique test user 
 function createTestUser(overrides = {}) {
   const uniqueValue = `${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 
@@ -12,6 +13,7 @@ function createTestUser(overrides = {}) {
   };
 }
 
+// Extract a token from the login response
 function extractToken(response) {
   return (
     response.body.token ||
@@ -61,6 +63,7 @@ async function registerAndLogin(userData = {}) {
   };
 }
 
+// Create example valid trip data for tests
 function createTestTrip(overrides = {}) {
   return {
     destination: "London",
