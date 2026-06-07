@@ -1,5 +1,6 @@
 const { z } = require("zod");
 
+// Validate user registration input
 const registerSchema = z.object({
   name: z
     .string()
@@ -20,6 +21,7 @@ const registerSchema = z.object({
     .max(100, "Password cannot exceed 100 characters")
 });
 
+// Validate login input
 const loginSchema = z.object({
   email: z
     .string()
@@ -30,6 +32,7 @@ const loginSchema = z.object({
   password: z
     .string()
     .min(1, "Password is required")
+    .max(100, "Password cannot exceed 100 characters")
 });
 
 module.exports = {

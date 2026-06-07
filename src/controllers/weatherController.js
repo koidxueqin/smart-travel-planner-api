@@ -1,6 +1,8 @@
 const weatherService = require("../services/weatherService");
 const AppError = require("../utils/AppError");
 
+
+// Handles GET /api/v1/weather?city=CityName
 async function getWeather(req, res, next) {
   try {
     const { city } = req.query;

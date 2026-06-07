@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const connectDatabase = require("../config/database");
 const AppError = require("../utils/AppError");
 
+// Authenticate requests using a JWT access token
 async function authenticate(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
@@ -23,14 +24,16 @@ async function authenticate(req, res, next) {
 
     let decoded;
 
+    // General authentication error for API client safety
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
+    } catch {
       throw new AppError("Authentication required", 401);
     }
 
     const db = await connectDatabase();
 
+    // Fetch latest user data so invalid users cannot keep using old tokens
     const user = await db.get(
       `
       SELECT

@@ -5,6 +5,7 @@ const {
 
 const authService = require("../services/authService");
 
+// Handles POST /api/v1/auth/register
 async function register(req, res, next) {
   try {
     const validatedData = registerSchema.parse(req.body);
@@ -23,6 +24,7 @@ async function register(req, res, next) {
   }
 }
 
+// Handles POST /api/v1/auth/login
 async function login(req, res, next) {
   try {
     const validatedData = loginSchema.parse(req.body);
@@ -42,6 +44,7 @@ async function login(req, res, next) {
   }
 }
 
+// Handles GET /api/v1/auth/me
 async function getMe(req, res, next) {
   try {
     return res.status(200).json({

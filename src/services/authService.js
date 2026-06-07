@@ -7,6 +7,7 @@ const AppError = require("../utils/AppError");
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES_IN = "1h";
 
+// Create a JWT access token for authenticated user
 function createToken(user) {
   if (!process.env.JWT_SECRET) {
     throw new AppError("JWT secret is not configured", 500);
@@ -25,6 +26,7 @@ function createToken(user) {
   );
 }
 
+// Get user details without exposing password hash
 async function getUserById(id) {
   const db = await connectDatabase();
 
@@ -46,6 +48,7 @@ async function getUserById(id) {
   return user;
 }
 
+// Register a new user account
 async function registerUser(userData) {
   const db = await connectDatabase();
 
@@ -85,6 +88,7 @@ async function registerUser(userData) {
   return newUser;
 }
 
+// Check password and login
 async function loginUser(loginData) {
   const db = await connectDatabase();
 
@@ -115,7 +119,7 @@ async function loginUser(loginData) {
       loginData.password,
       user.passwordHash
     );
-  } catch (error) {
+  } catch {
     isPasswordCorrect = false;
   }
 
