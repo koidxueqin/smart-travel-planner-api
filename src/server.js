@@ -6,6 +6,7 @@ const connectDatabase = require("./config/database");
 
 const PORT = process.env.PORT || 3000;
 
+// Start the API after the SQLite database connection is ready
 connectDatabase()
   .then(() => {
     app.listen(PORT, () => {

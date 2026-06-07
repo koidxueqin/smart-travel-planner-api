@@ -1,3 +1,4 @@
+// Group current temperature into travel-friendly categories
 function getTemperatureCategory(temperature) {
   if (temperature <= 10) {
     return "Cold";
@@ -14,8 +15,9 @@ function getTemperatureCategory(temperature) {
   return "Hot";
 }
 
+// Convert weather description from OpenWeatherMap into simpler condition
 function getWeatherCondition(description) {
-  const weatherDescription = description.toLowerCase();
+  const weatherDescription = String(description || "").toLowerCase();
 
   if (weatherDescription.includes("thunderstorm")) {
     return "Thunderstorm";
@@ -51,6 +53,7 @@ function getWeatherCondition(description) {
   return "Normal";
 }
 
+// Practical travel suggestion based on weather condition
 function getTravelSuggestion(weatherCondition, temperatureCategory, windSpeed) {
   const isHighWind = windSpeed >= 10;
 
@@ -85,6 +88,7 @@ function getTravelSuggestion(weatherCondition, temperatureCategory, windSpeed) {
   return "Weather conditions are generally suitable for travel. Check local conditions before departure.";
 }
 
+// Weather-based travel summary and advice for users
 function buildTravelSummary(weather) {
   const temperatureCategory = getTemperatureCategory(weather.temperature);
   const weatherCondition = getWeatherCondition(weather.description);

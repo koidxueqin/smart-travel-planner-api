@@ -3,12 +3,14 @@ const AppError = require("../utils/AppError");
 
 const OPENWEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/weather";
 
+// Check that OpenWeatherMap API key is available
 function checkWeatherApiKey() {
   if (!process.env.OPENWEATHER_API_KEY) {
     throw new AppError("Weather service is not configured properly", 503);
   }
 }
 
+// Build the axios request configuration for OpenWeatherMap
 function buildWeatherRequestConfig(destination) {
   checkWeatherApiKey();
 
@@ -24,6 +26,7 @@ function buildWeatherRequestConfig(destination) {
   };
 }
 
+ // Validate important fields expected from OpenWeatherMap
 function isValidWeatherData(weatherData) {
   return (
     weatherData &&
@@ -42,6 +45,7 @@ function isValidWeatherData(weatherData) {
   );
 }
 
+// Convert the OpenWeatherMap response into clean format
 function formatWeatherData(weatherData) {
   if (!isValidWeatherData(weatherData)) {
     throw new AppError("Unexpected weather data received", 502);
@@ -58,6 +62,7 @@ function formatWeatherData(weatherData) {
   };
 }
 
+// Convert OpenWeatherMap, timeout, and network errors into clear API responses
 function handleOpenWeatherError(error) {
   if (error instanceof AppError) {
     throw error;
@@ -106,6 +111,7 @@ function handleOpenWeatherError(error) {
   throw new AppError("Unable to fetch weather data", 502);
 }
 
+// Fetch current weather data for a city 
 async function getWeatherByCity(destination) {
   try {
     if (!destination || destination.trim() === "") {

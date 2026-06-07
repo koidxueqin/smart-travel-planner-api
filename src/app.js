@@ -21,8 +21,8 @@ app.use(helmet());
 // Allows API access from tools like Postman
 app.use(cors());
 
-// Allows Express to read JSON request bodies with asasfe size limit
-app.use(express.json({ limit: "10kb"}));
+// Allows Express to read JSON request bodies with a safe size limit
+app.use(express.json({ limit: "10kb" }));
 
 // Logs requests in the terminal
 if (process.env.NODE_ENV !== "test") {

@@ -1,5 +1,6 @@
 const AppError = require("../utils/AppError");
 
+// Authorise access based on users roles
 function authorizeRoles(...allowedRoles) {
   return function (req, res, next) {
     if (!req.user) {

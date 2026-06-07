@@ -4,7 +4,7 @@ const authenticate = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// All trip routes below this line require a valid JWT
+// All trip routes require authentication because trips are user-specific
 router.use(authenticate);
 
 // Create a new trip

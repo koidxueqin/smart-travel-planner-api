@@ -11,6 +11,7 @@ async function columnExists(database, tableName, columnName) {
   return columns.some((column) => column.name === columnName);
 }
 
+// Separate SQLite database during automated tests
 function getDatabaseFileName() {
   if (process.env.NODE_ENV === "test") {
     return "travel_test.db";
@@ -19,6 +20,7 @@ function getDatabaseFileName() {
   return "travel.db";
 }
 
+// Build database folder path and database file path
 function getDatabasePath() {
   const dataDir = path.join(__dirname, "../../data");
   const databasePath = path.join(dataDir, getDatabaseFileName());
@@ -33,7 +35,7 @@ async function createTables(database) {
   // Enable SQLite foreign key support
   await database.exec("PRAGMA foreign_keys = ON");
 
-  // Create users table
+  // Create registered users table
   await database.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +48,7 @@ async function createTables(database) {
     )
   `);
 
-  // Create trips table
+  // Create user travel records table
   await database.exec(`
     CREATE TABLE IF NOT EXISTS trips (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,6 +100,7 @@ async function connectDatabase() {
   return db;
 }
 
+// Clears database records during automated tests
 async function clearDatabase() {
   const database = await connectDatabase();
 
@@ -108,6 +111,7 @@ async function clearDatabase() {
   `);
 }
 
+// Closes the active database connection after automated tests finish running
 async function closeDatabase() {
   if (db) {
     await db.close();
