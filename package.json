@@ -1,16 +1,24 @@
 {
   "name": "travel-planner-api",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "test": "cross-env NODE_ENV=test jest --runInBand"
   },
-  "keywords": [],
+  "keywords": [
+    "nodejs",
+    "express",
+    "sqlite",
+    "rest-api",
+    "jwt",
+    "openweathermap",
+    "travel-planner"
+  ],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Backend REST API for a Smart Travel Planner with OpenWeatherMap integration.",
   "dependencies": {
     "axios": "^1.16.1",
     "bcrypt": "^6.0.0",
