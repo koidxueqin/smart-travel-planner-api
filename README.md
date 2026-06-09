@@ -68,7 +68,6 @@ Create a `.env` file in the project root:
 
 ```env
 PORT=3000
-DATABASE_PATH=./data/travel.db
 OPENWEATHER_API_KEY=openweathermap_api_key
 JWT_SECRET=long_random_jwt_secret
 ```
