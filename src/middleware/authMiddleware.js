@@ -28,7 +28,7 @@ async function authenticate(req, res, next) {
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch {
-      throw new AppError("Authentication required", 401);
+      throw new AppError("Invalid Token.", 401);
     }
 
     const db = await connectDatabase();
