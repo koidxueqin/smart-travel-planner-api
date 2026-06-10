@@ -2,6 +2,25 @@ const connectDatabase = require("../config/database");
 const weatherService = require("./weatherService");
 const AppError = require("../utils/AppError");
 const { buildTravelSummary } = require("../utils/weatherAdvice");
+const { encryptText, decryptText } = require("../utils/encryption");
+
+// Decrypt one trip before returning it to the API response
+function decryptTrip(trip) {
+  if (!trip) {
+    return trip;
+  }
+
+  return {
+    ...trip,
+    notes: decryptText(trip.notes),
+    preferences: decryptText(trip.preferences)
+  };
+}
+
+// Decrypt many trips before returning them to the API response
+function decryptTrips(trips) {
+  return trips.map(decryptTrip);
+}
 
 // Saves a new trip into SQLite for the logged-in user
 async function createTrip(tripData, userId) {
@@ -26,8 +45,8 @@ async function createTrip(tripData, userId) {
       tripData.country,
       tripData.startDate,
       tripData.endDate,
-      tripData.notes,
-      tripData.preferences
+      encryptText(tripData.notes),
+      encryptText(tripData.preferences)
     ]
   );
 
@@ -60,7 +79,7 @@ async function getAllTrips(userId) {
     [userId]
   );
 
-  return trips;
+  return decryptTrips(trips);
 }
 
 // Admin only: get all trips from all users
@@ -89,7 +108,7 @@ async function getAllTripsForAdmin() {
     `
   );
 
-  return trips;
+  return decryptTrips(trips);
 }
 
 // Get one trip by ID
@@ -115,7 +134,7 @@ async function getTripById(id) {
     [id]
   );
 
-  return trip;
+  return decryptTrip(trip);
 }
 
 // Get trip with weather and travel summary by ID, only if it belongs to the user
@@ -162,8 +181,8 @@ async function updateTrip(id, tripData, userId) {
       tripData.country,
       tripData.startDate,
       tripData.endDate,
-      tripData.notes,
-      tripData.preferences,
+      encryptText(tripData.notes),
+      encryptText(tripData.preferences),
       id,
       userId
     ]
