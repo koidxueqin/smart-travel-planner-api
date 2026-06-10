@@ -65,6 +65,18 @@ async function createTables(database) {
     )
   `);
 
+  // Create API keys table for the self-developed API
+  await database.exec(`
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      key_hash TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
   // Add user_id only if missing in older databases
   const hasUserIdColumn = await columnExists(database, "trips", "user_id");
 
@@ -105,9 +117,10 @@ async function clearDatabase() {
   const database = await connectDatabase();
 
   await database.exec(`
+    DELETE FROM api_keys;
     DELETE FROM trips;
     DELETE FROM users;
-    DELETE FROM sqlite_sequence WHERE name IN ('trips', 'users');
+    DELETE FROM sqlite_sequence WHERE name IN ('api_keys', 'trips', 'users');
   `);
 }
 
