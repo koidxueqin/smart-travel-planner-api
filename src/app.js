@@ -12,6 +12,8 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
+const apiKeyRoutes = require("./routes/apiKeyRoutes");
+const packingListRoutes = require("./routes/packingListRoutes");
 
 const app = express();
 
@@ -67,14 +69,22 @@ app.get("/", (req, res) => {
 // Auth routes
 app.use("/api/v1/auth", authRoutes);
 
+// API key routes
+app.use("/api/v1/api-keys", apiKeyRoutes);
+
 // Admin routes
 app.use("/api/v1/admin", adminRoutes);
 
 // Trip routes
 app.use("/api/v1/trips", tripRoutes);
 
+// Packing list routes
+app.use("/api/v1/packing-list", packingListRoutes);
+
 // Weather routes
 app.use("/api/v1/weather", weatherRoutes);
+
+
 
 // Handles wrong routes
 app.use(notFound);
