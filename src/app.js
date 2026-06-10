@@ -14,6 +14,7 @@ const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 const apiKeyRoutes = require("./routes/apiKeyRoutes");
 const packingListRoutes = require("./routes/packingListRoutes");
+const tripPlanRoutes = require("./routes/tripPlanRoutes");
 
 const app = express();
 
@@ -81,9 +82,11 @@ app.use("/api/v1/trips", tripRoutes);
 // Packing list routes
 app.use("/api/v1/packing-list", packingListRoutes);
 
+// Trip plan routes
+app.use("/api/v1/trip-plan", tripPlanRoutes);
+
 // Weather routes
 app.use("/api/v1/weather", weatherRoutes);
-
 
 
 // Handles wrong routes

@@ -90,5 +90,6 @@ async function getPackingList(tripId, userId) {
 }
 
 module.exports = {
-  getPackingList
+  getPackingList,
+  buildPackingChecklist
 };
