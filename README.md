@@ -1,62 +1,12 @@
 # Smart Travel Planner API
 
-A backend-only REST API for a Smart Travel Planner project.
+Backend-only REST API for managing user trips and generating trip plans using saved trip data and real-time weather data from OpenWeatherMap.
 
-The system allows users to register, log in, manage their own travel records, and combine saved trip data with real-time weather data from OpenWeatherMap.
+## Tech Stack
 
-## Project Overview
+Node.js, Express.js, SQLite, OpenWeatherMap API, JWT, bcrypt, crypto, dotenv, helmet, express-rate-limit, cors, morgan, zod, Jest, Supertest, Postman.
 
-This project demonstrates a Smart Travel Planner system that combines:
-
-1. A self-developed REST API for managing user-specific travel records
-2. A third-party API integration for real-time weather data
-
-The API stores users and trips in SQLite. Users can create and manage their own trips, then fetch weather information and a rule-based travel summary for saved destinations.
-
-## Project Type
-
-Backend-only REST API tested using:
-
-* Postman
-* Jest
-* Supertest
-
-## Technology Stack
-
-* Node.js
-* Express.js
-* SQLite
-* OpenWeatherMap API
-* Postman
-* Jest and Supertest
-* dotenv
-* helmet
-* express-rate-limit
-* cors
-* morgan
-* zod
-* bcrypt
-* jsonwebtoken
-* nodemon
-
-## Main Features
-
-* RESTful API with `/api/v1` versioning
-* User registration and login
-* Password hashing with bcrypt
-* JWT authentication for protected routes
-* User-specific trip CRUD operations
-* Role-based admin access
-* SQLite database storage
-* OpenWeatherMap weather integration
-* Weather-based travel summary for saved trips
-* Zod request validation
-* Centralized error handling
-* Security middleware using Helmet, CORS, and rate limiting
-* Automated tests using Jest and Supertest
-* Manual API testing using Postman
-
-## Setup Instructions
+## Setup
 
 Install dependencies:
 
@@ -64,101 +14,106 @@ Install dependencies:
 npm install
 ```
 
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```env
 PORT=3000
-DATABASE_PATH=./data/travel.db
 OPENWEATHER_API_KEY=openweathermap_api_key
-JWT_SECRET=long_random_jwt_secret
+JWT_SECRET=jwt_secret
+ENCRYPTION_KEY=32_character_encryption_key
 ```
 
-Run the development server:
+Run the server:
 
 ```bash
 npm run dev
 ```
 
-Run automated tests:
+Run tests:
 
 ```bash
 npm test
 ```
 
-## Health Check
+## Main Features
 
-```http
-GET http://localhost:3000/health
-```
-
-Expected response:
-
-```json
-{
-  "success": true,
-  "status": "OK",
-  "message": "Smart Travel Planner API is running"
-}
-```
+- User registration and login
+- JWT authentication
+- User-specific trip CRUD
+- Admin route for viewing all trips
+- OpenWeatherMap weather integration
+- Trip Plan API with weather, advice, and packing checklist
+- API key generation and hashing
+- Encrypted trip notes and preferences
+- Validation, rate limiting, Helmet, and centralized error handling
+- Manual testing with Postman
+- Automated testing with Jest and Supertest
 
 ## API Endpoints
 
+### Health
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| GET | `/health` | Check API status |
+
 ### Authentication
 
-| Method | Endpoint                | Description                | Protected |
-| ------ | ----------------------- | -------------------------- | --------- |
-| POST   | `/api/v1/auth/register` | Register a new user        | No        |
-| POST   | `/api/v1/auth/login`    | Log in and receive a JWT   | No        |
-| GET    | `/api/v1/auth/me`       | Get logged-in user profile | Yes       |
+| Method | Endpoint | Protection |
+| --- | --- | --- |
+| POST | `/api/v1/auth/register` | Public |
+| POST | `/api/v1/auth/login` | Public |
+| GET | `/api/v1/auth/me` | JWT required |
 
 ### Trips
 
-| Method | Endpoint                    | Description                              | Protected |
-| ------ | --------------------------- | ---------------------------------------- | --------- |
-| POST   | `/api/v1/trips`             | Create a new trip                        | Yes       |
-| GET    | `/api/v1/trips`             | Get all trips for the logged-in user     | Yes       |
-| GET    | `/api/v1/trips/:id`         | Get one trip by ID                       | Yes       |
-| PUT    | `/api/v1/trips/:id`         | Update one trip by ID                    | Yes       |
-| DELETE | `/api/v1/trips/:id`         | Delete one trip by ID                    | Yes       |
-| GET    | `/api/v1/trips/:id/weather` | Get trip with weather and travel summary | Yes       |
+| Method | Endpoint | Protection |
+| --- | --- | --- |
+| POST | `/api/v1/trips` | JWT required |
+| GET | `/api/v1/trips` | JWT required |
+| GET | `/api/v1/trips/:id` | JWT required |
+| PUT | `/api/v1/trips/:id` | JWT required |
+| DELETE | `/api/v1/trips/:id` | JWT required |
+| GET | `/api/v1/trips/:id/weather` | JWT required |
+
+### API Keys
+
+| Method | Endpoint | Protection |
+| --- | --- | --- |
+| POST | `/api/v1/api-keys` | JWT required |
+| GET | `/api/v1/api-keys` | JWT required |
+
+### Trip Plan and Packing List
+
+| Method | Endpoint | Protection |
+| --- | --- | --- |
+| GET | `/api/v1/trip-plan/:tripId` | API key required |
+| GET | `/api/v1/packing-list/:tripId` | API key required |
 
 ### Weather
 
-| Method | Endpoint                      | Description                    | Protected |
-| ------ | ----------------------------- | ------------------------------ | --------- |
-| GET    | `/api/v1/weather?city=London` | Get current weather for a city | No        |
+| Method | Endpoint | Protection |
+| --- | --- | --- |
+| GET | `/api/v1/weather?city=London` | Public |
 
 ### Admin
 
-| Method | Endpoint              | Description                  | Protected       |
-| ------ | --------------------- | ---------------------------- | --------------- |
-| GET    | `/api/v1/admin/trips` | Get all trips from all users | Yes, admin only |
+| Method | Endpoint | Protection |
+| --- | --- | --- |
+| GET | `/api/v1/admin/trips` | Admin only |
 
-## Authentication
+## Authentication Headers
 
-Protected routes require a JWT token in the request header:
+JWT routes require:
 
 ```http
-Authorization: Bearer your_token_here
+Authorization: Bearer user_token
 ```
 
-Example register request:
+API key routes require:
 
-```json
-{
-  "name": "Test User",
-  "email": "test@example.com",
-  "password": "Password123"
-}
-```
-
-Example login request:
-
-```json
-{
-  "email": "test@example.com",
-  "password": "Password123"
-}
+```http
+x-api-key: api_key
 ```
 
 ## Example Trip Request
@@ -174,118 +129,21 @@ Example login request:
 }
 ```
 
-## Example Success Response
+## Testing
 
-```json
-{
-  "success": true,
-  "message": "Trip created successfully",
-  "data": {
-    "id": 1,
-    "userId": 1,
-    "destination": "Tokyo",
-    "country": "Japan",
-    "startDate": "2026-06-01",
-    "endDate": "2026-06-07",
-    "notes": "Visit temples and try local food",
-    "preferences": "Food, culture, sightseeing",
-    "createdAt": "2026-06-08 10:00:00",
-    "updatedAt": "2026-06-08 10:00:00"
-  }
-}
-```
+The project is tested manually using Postman and automatically using Jest/Supertest.
 
-## Example Error Response
+Tests cover authentication, trip CRUD, user ownership, weather integration, API keys, trip plan, packing list, admin access, and error handling.
 
-```json
-{
-  "success": false,
-  "message": "Trip not found"
-}
-```
+## Security
 
-## Third-Party API Integration
-
-This project integrates OpenWeatherMap to fetch real-time weather data.
-
-The weather data is used in two ways:
-
-1. Public weather search by city
-2. Weather summary for a saved trip destination
-
-The API handles common third-party API errors, including:
-
-* Missing API key
-* Invalid API key
-* Invalid city name
-* City not found
-* Weather API rate limit
-* Weather API timeout
-* Network failure
-* Unexpected weather response format
-
-## API Documentation and Postman Testing
-
-API documentation and Postman files are included in the `postman` folder.
-
-```txt
-postman/
-  Smart Travel Planner API.postman_collection.json
-  Smart Travel Planner Local.postman_environment.json
-```
-
-The Postman collection contains organised requests for authentication, trip management, weather, admin access, and error testing.
-
-## Automated Testing
-
-Automated tests are written using Jest and Supertest.
-
-Run tests:
-
-```bash
-npm test
-```
-
-The automated tests cover:
-
-* Health check
-* User registration
-* Duplicate email prevention
-* User login
-* Protected route authentication
-* Trip CRUD operations
-* Trip validation
-* User ownership checks
-* Weather endpoint with mocked weather data
-* Trip weather summary
-* Admin role access
-* Clean error responses
-
-## Security Features
-
-* Passwords are hashed using bcrypt.
-* JWT is used for protected routes.
-* Users can only access their own trips.
-* Admin-only routes use role-based access control.
-* API keys and JWT secrets are stored in `.env`.
-* `.env` is ignored by Git.
-* Helmet is used for secure HTTP headers.
-* CORS is configured.
-* Rate limiting helps reduce repeated request abuse.
-* Request body size is limited.
-* Zod validates request input.
-* Unexpected server errors return safe messages.
-
-## Notes About Admin Testing
-
-Normal registered users are created with the `user` role by default.
-
-For testing the admin route, an admin user can be created by updating the user role in the SQLite database during testing or by using a prepared test setup.
+Passwords are hashed with bcrypt. JWT protects user routes. API keys are generated with crypto, shown once, hashed before storage, and expire after 90 days. Sensitive trip notes and preferences are encrypted. Secrets are stored in `.env`, which is ignored by Git.
 
 ## Limitations
 
-* This is a backend-only project with no frontend interface.
-* OpenWeatherMap data depends on external API availability.
-* Admin account creation is handled manually for testing.
-* SQLite is suitable for a small project but not ideal for high-traffic production systems.
-* The weather summary is rule-based and does not have AI implementation.
+- Backend-only project with no frontend
+- OpenWeatherMap depends on external API availability
+- Admin role is prepared manually for testing
+- SQLite is suitable for a small project, not high-traffic production
+- Travel advice and packing checklist are rule-based, not AI
+- Uses current weather data, not long-term forecasts
