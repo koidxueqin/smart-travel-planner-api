@@ -4,7 +4,7 @@ Backend-only REST API for managing user trips and generating trip plans using sa
 
 ## Tech Stack
 
-Node.js, Express.js, SQLite, OpenWeatherMap API, JWT, bcrypt, crypto, dotenv, helmet, express-rate-limit, cors, morgan, zod, Jest, Supertest, Postman.
+Node.js v20.18.0, Express.js, SQLite, OpenWeatherMap API, JWT, bcrypt, crypto, dotenv, helmet, express-rate-limit, cors, morgan, zod, Jest, Supertest, Postman.
 
 ## Setup
 
@@ -147,3 +147,11 @@ Passwords are hashed with bcrypt. JWT protects user routes. API keys are generat
 - SQLite is suitable for a small project, not high-traffic production
 - Travel advice and packing checklist are rule-based
 - Uses current weather data, not long-term forecasts
+
+## OpenAPI Documentation
+
+The OpenAPI documentation is available in:
+
+`docs/openapi.yaml`
+
+It describes the implemented API endpoints, request formats, authentication methods, and expected responses.
