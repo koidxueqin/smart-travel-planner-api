@@ -107,13 +107,13 @@ npm test
 JWT routes require:
 
 ```http
-Authorization: Bearer your_token_here
+Authorization: Bearer user_token
 ```
 
 API key routes require:
 
 ```http
-x-api-key: your_api_key_here
+x-api-key: api_key
 ```
 
 ## Example Trip Request
@@ -145,5 +145,5 @@ Passwords are hashed with bcrypt. JWT protects user routes. API keys are generat
 - OpenWeatherMap depends on external API availability
 - Admin role is prepared manually for testing
 - SQLite is suitable for a small project, not high-traffic production
-- Travel advice and packing checklist are rule-based
+- Travel advice and packing checklist are rule-based, not AI
 - Uses current weather data, not long-term forecasts
