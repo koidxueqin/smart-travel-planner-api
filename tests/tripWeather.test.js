@@ -1,4 +1,8 @@
-const expectCookies = require("supertest/lib/cookies");
+// Mock the weather service so the test does not call the real OpenWeatherMap API
+jest.mock("../src/services/weatherService", () => ({
+  getWeatherByCity: jest.fn()
+}));
+
 const connectDatabase = require("../src/config/database");
 const {
   request,
@@ -7,228 +11,135 @@ const {
   createTestTrip
 } = require("./testUtils");
 
+const weatherService = require("../src/services/weatherService");
+
 const { clearDatabase, closeDatabase } = connectDatabase;
 
-let token;
+// Helper function to create a trip during tests
+async function createTrip(token, tripData = {}) {
+  const response = await request(app)
+    .post("/api/v1/trips")
+    .set("Authorization", `Bearer ${token}`)
+    .send(createTestTrip(tripData));
 
-// Clear database and create a fresh logged-in user before each test
-beforeEach(async () => {
-  await clearDatabase();
+  return response;
+}
 
-  const loginData = await registerAndLogin();
-  token = loginData.token;
-});
+describe("Trip Weather Summary API", () => {
+  beforeEach(async () => {
+    // Clear mock history before each test
+    jest.clearAllMocks();
 
-// Close database connection after all trip tests finish
-afterAll(async () => {
-  await closeDatabase();
-});
+    // Reset database so every test starts with clean data
+    await clearDatabase();
 
-describe("Trips API", () => {
-  test("Protected trip routes without token should fail", async () => {
-    // Try to access protected trip route without authentication
-    const response = await request(app).get("/api/v1/trips");
+    // Fake weather response returned by the mocked weather service
+    weatherService.getWeatherByCity.mockResolvedValue({
+      city: "London",
+      country: "GB",
+      temperature: 18,
+      feelsLike: 17,
+      description: "light rain",
+      humidity: 70,
+      windSpeed: 4
+    });
+  });
 
-    // Request should fail because no token is provided
+  afterAll(async () => {
+    // Close database connection after all tests finish
+    await closeDatabase();
+  });
+
+  test("GET /api/v1/trips/:id/weather should return trip, weather, and travel summary", async () => {
+    // Register and log in a test user
+    const { token } = await registerAndLogin();
+
+    // Create a trip owned by the logged-in user
+    const tripResponse = await createTrip(token);
+    const tripId = tripResponse.body.data.id;
+
+    // Request the trip weather summary
+    const response = await request(app)
+      .get(`/api/v1/trips/${tripId}/weather`)
+      .set("Authorization", `Bearer ${token}`);
+
+    // Check successful response
+    expect(response.statusCode).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe("Trip with weather fetched successfully");
+
+    // Check that the response combines trip data, weather data, and travel advice
+    expect(response.body.data.trip).toBeDefined();
+    expect(response.body.data.weather).toBeDefined();
+    expect(response.body.data.travelSummary).toBeDefined();
+
+    // Check trip data
+    expect(response.body.data.trip.id).toBe(tripId);
+    expect(response.body.data.trip.destination).toBe("London");
+
+    // Check mocked weather data
+    expect(response.body.data.weather.city).toBe("London");
+    expect(response.body.data.weather.description).toBe("light rain");
+
+    // Check travel summary fields
+    expect(response.body.data.travelSummary.temperatureCategory).toBeDefined();
+    expect(response.body.data.travelSummary.weatherCondition).toBeDefined();
+    expect(response.body.data.travelSummary.suggestion).toBeDefined();
+
+    // Make sure the weather service was called using the trip destination
+    expect(weatherService.getWeatherByCity).toHaveBeenCalledWith("London");
+  });
+
+  test("GET /api/v1/trips/:id/weather without token should fail", async () => {
+    // Protected route should fail if no JWT token is provided
+    const response = await request(app).get("/api/v1/trips/1/weather");
+
     expect(response.statusCode).toBe(401);
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe("Authentication required");
   });
 
-  test("Create trip with valid token", async () => {
-    const trip = createTestTrip();
+  test("GET /api/v1/trips/:id/weather with invalid trip ID should fail", async () => {
+    const { token } = await registerAndLogin();
 
-    // Create a new trip using a valid user token
+    // Use an invalid non-number trip ID
     const response = await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${token}`)
-      .send(trip);
-
-    // Trip should be created and linked to the logged-in user
-    expect(response.statusCode).toBe(201);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data.destination).toBe(trip.destination);
-    expect(response.body.data.userId).toBeDefined();
-  });
-
-  test("Get trips with valid token", async () => {
-    const trip = createTestTrip();
-
-    // Create a trip first so there is data to retrieve
-    await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${token}`)
-      .send(trip);
-
-    // Retrieve trips for the logged-in user
-    const response = await request(app)
-      .get("/api/v1/trips")
+      .get("/api/v1/trips/abc/weather")
       .set("Authorization", `Bearer ${token}`);
 
-    // Response should return an array of trips
-    expect(response.statusCode).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.count).toBeGreaterThanOrEqual(1);
-  });
-
-  test("Get one trip with valid token", async () => {
-    const trip = createTestTrip();
-
-    // Create a trip and store its ID
-    const createResponse = await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${token}`)
-      .send(trip);
-
-    const tripId = createResponse.body.data.id;
-
-    // Retrieve the created trip by ID
-    const response = await request(app)
-      .get(`/api/v1/trips/${tripId}`)
-      .set("Authorization", `Bearer ${token}`);
-
-    // Returned trip should match the created trip
-    expect(response.statusCode).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data.id).toBe(tripId);
-    expect(response.body.data.destination).toBe(trip.destination);
-  });
-
-  test("Update trip with valid token", async () => {
-    const trip = createTestTrip();
-
-    // Create a trip before updating it
-    const createResponse = await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${token}`)
-      .send(trip);
-
-    const tripId = createResponse.body.data.id;
-
-    // Prepare updated trip data
-    const updatedTrip = createTestTrip({
-      destination: "Paris",
-      country: "France",
-      startDate: "2026-08-01",
-      endDate: "2026-08-05",
-      notes: "Updated trip notes",
-      preferences: "Food and museums"
-    });
-
-    // Update the existing trip
-    const response = await request(app)
-      .put(`/api/v1/trips/${tripId}`)
-      .set("Authorization", `Bearer ${token}`)
-      .send(updatedTrip);
-
-    // Updated data should be returned in the response
-    expect(response.statusCode).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data.destination).toBe("Paris");
-    expect(response.body.data.country).toBe("France");
-  });
-
-  test("Delete trip with valid token", async () => {
-    const trip = createTestTrip();
-
-    // Create a trip before deleting it
-    const createResponse = await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${token}`)
-      .send(trip);
-
-    const tripId = createResponse.body.data.id;
-
-    // Delete the created trip
-    const deleteResponse = await request(app)
-      .delete(`/api/v1/trips/${tripId}`)
-      .set("Authorization", `Bearer ${token}`);
-
-    expect(deleteResponse.statusCode).toBe(200);
-    expect(deleteResponse.body.success).toBe(true);
-
-    // Try to retrieve the deleted trip
-    const getResponse = await request(app)
-      .get(`/api/v1/trips/${tripId}`)
-      .set("Authorization", `Bearer ${token}`);
-
-    // Deleted trip should no longer be found
-    expect(getResponse.statusCode).toBe(404);
-    expect(getResponse.body.success).toBe(false);
-  });
-
-  test("Missing destination should fail", async () => {
-    // Send trip data without the required destination field
-    const response = await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${token}`)
-      .send({
-        country: "United Kingdom",
-        startDate: "2026-07-10",
-        endDate: "2026-07-15"
-      });
-
-    // Validation should reject the incomplete request
     expect(response.statusCode).toBe(400);
     expect(response.body.success).toBe(false);
-    expect(response.body.message).toBe("Validation failed");
+    expect(response.body.message).toBe("Trip ID must be a positive number");
   });
 
-  test("Invalid date should fail", async () => {
-    // Send a trip with an invalid date format
+  test("GET /api/v1/trips/:id/weather should fail when trip does not exist", async () => {
+    const { token } = await registerAndLogin();
+
+    // Use a valid number ID that does not exist in the database
     const response = await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${token}`)
-      .send(
-        createTestTrip({
-          startDate: "2026-99-99"
-        })
-      );
+      .get("/api/v1/trips/9999/weather")
+      .set("Authorization", `Bearer ${token}`);
 
-    // Validation should reject invalid dates
-    expect(response.statusCode).toBe(400);
+    expect(response.statusCode).toBe(404);
     expect(response.body.success).toBe(false);
-    expect(response.body.message).toBe("Validation failed");
+    expect(response.body.message).toBe("Trip not found");
   });
 
-  test("End date earlier than start date should fail", async () => {
-    // Send a trip where the end date is before the start date
-    const response = await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${token}`)
-      .send(
-        createTestTrip({
-          startDate: "2026-07-20",
-          endDate: "2026-07-10"
-        })
-      );
-
-    // Validation should reject invalid date ranges
-    expect(response.statusCode).toBe(400);
-    expect(response.body.success).toBe(false);
-    expect(response.body.message).toBe("Validation failed");
-  });
-
-  test("User cannot access another user's trip", async () => {
+  test("GET /api/v1/trips/:id/weather should block another user's trip", async () => {
     // Create two separate users
-    const firstUser = await registerAndLogin();
-    const secondUser = await registerAndLogin();
+    const userOne = await registerAndLogin();
+    const userTwo = await registerAndLogin();
 
     // First user creates a trip
-    const createResponse = await request(app)
-      .post("/api/v1/trips")
-      .set("Authorization", `Bearer ${firstUser.token}`)
-      .send(createTestTrip());
+    const tripResponse = await createTrip(userOne.token);
+    const tripId = tripResponse.body.data.id;
 
-    const tripId = createResponse.body.data.id;
-
-    // Second user tries to access the first user's trip
+    // Second user tries to access the first user's trip weather summary
     const response = await request(app)
-      .get(`/api/v1/trips/${tripId}`)
-      .set("Authorization", `Bearer ${secondUser.token}`);
+      .get(`/api/v1/trips/${tripId}/weather`)
+      .set("Authorization", `Bearer ${userTwo.token}`);
 
-    // Users should not be allowed to access trips they do not own
+    // Access should be blocked because the trip belongs to another user
     expect(response.statusCode).toBe(403);
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe("Access denied");
