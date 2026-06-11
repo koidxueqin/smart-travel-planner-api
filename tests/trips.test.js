@@ -1,4 +1,3 @@
-const expectCookies = require("supertest/lib/cookies");
 const connectDatabase = require("../src/config/database");
 const {
   request,
