@@ -1,0 +1,231 @@
+openapi: 3.0.0
+
+info:
+  title: Smart Travel Planner API
+  version: 1.0.0
+  description: Backend REST API for managing travel records, user authentication, API keys, weather data, trip plans, and packing lists.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /health:
+    get:
+      summary: Check API health
+      responses:
+        "200":
+          description: API is running
+
+  /api/v1/auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: User One
+              email: user1@example.com
+              password: password123
+      responses:
+        "201":
+          description: User registered successfully
+
+  /api/v1/auth/login:
+    post:
+      summary: Login user and return JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              email: user1@example.com
+              password: password123
+      responses:
+        "200":
+          description: Login successful
+
+  /api/v1/auth/me:
+    get:
+      summary: Get current logged-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user returned
+        "401":
+          description: Authorization token is required
+
+  /api/v1/trips:
+    get:
+      summary: Get all trips owned by the logged-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Trips returned successfully
+
+    post:
+      summary: Create a new trip
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              destination: Sydney
+              country: Australia
+              startDate: "2026-10-15"
+              endDate: "2026-10-22"
+              budget: 3000
+              preferences: beaches, food, sightseeing
+              notes: First solo trip
+      responses:
+        "201":
+          description: Trip created successfully
+
+  /api/v1/trips/{id}:
+    get:
+      summary: Get one trip by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip returned successfully
+        "404":
+          description: Trip not found
+
+    put:
+      summary: Update one trip by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip updated successfully
+
+    delete:
+      summary: Delete one trip by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip deleted successfully
+
+  /api/v1/trips/{id}/weather:
+    get:
+      summary: Get weather summary for a saved trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip weather returned successfully
+
+  /api/v1/weather:
+    get:
+      summary: Get weather data by city
+      parameters:
+        - name: city
+          in: query
+          required: true
+          schema:
+            type: string
+          example: London
+      responses:
+        "200":
+          description: Weather data returned successfully
+
+  /api/v1/api-keys:
+    post:
+      summary: Generate an API key for the logged-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "201":
+          description: API key generated successfully
+
+    get:
+      summary: Get API keys for the logged-in user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: API keys returned successfully
+
+  /api/v1/trip-plan/{tripId}:
+    get:
+      summary: Generate a complete trip plan using saved trip data and weather data
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip plan generated successfully
+
+  /api/v1/packing-list/{tripId}:
+    get:
+      summary: Generate a packing list for a saved trip
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Packing list generated successfully
+
+  /api/v1/admin/trips:
+    get:
+      summary: Admin route to view all trips
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All trips returned for admin
+        "403":
+          description: Admin access required
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
