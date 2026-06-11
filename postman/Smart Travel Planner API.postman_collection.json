@@ -347,7 +347,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"destination\": \"Sydney\",\r\n  \"country\": \"Australia\",\r\n  \"startDate\": \"2026-10-15\",\r\n  \"endDate\": \"2026-10-22\",\r\n  \"notes\": \"Visit the Opera House, relax at Bondi Beach, take a harbour walk, and try local seafood.\",\r\n  \"preferences\": \"Beaches, sightseeing, nature\"\r\n}",
+              "raw": "{\r\n  \"destination\": \"New York\",\r\n  \"country\": \"United States\",\r\n  \"startDate\": \"2026-10-01\",\r\n  \"endDate\": \"2026-10-08\",\r\n  \"notes\": \"Visit Times Square, Central Park, museums, and famous landmarks.\",\r\n  \"preferences\": \"City sightseeing, museums, shopping, entertainment\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -451,7 +451,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"destination\": \"Sydney\",\r\n  \"country\": \"Australia\",\r\n  \"startDate\": \"2026-07-11\",\r\n  \"endDate\": \"2026-07-16\",\r\n  \"notes\": \"Take photos of animals and plants\",\r\n  \"preferences\": \"Nature, walking, zoos\"\r\n}",
+              "raw": "{\r\n  \"destination\": \"Bangkok\",\r\n  \"country\": \"Thailand\",\r\n  \"startDate\": \"2027-01-08\",\r\n  \"endDate\": \"2027-01-14\",\r\n  \"notes\": \"Visit temples, night markets, malls, and try Thai food.\",\r\n  \"preferences\": \"Food, temples, shopping, nightlife\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -618,7 +618,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/trips/3/weather",
+              "raw": "{{baseUrl}}/api/v1/trips/{{tripId}}/weather",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -626,7 +626,7 @@
                 "api",
                 "v1",
                 "trips",
-                "3",
+                "{{tripId}}",
                 "weather"
               ]
             }
@@ -1131,7 +1131,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/v1/trips/3",
+              "raw": "{{baseUrl}}/api/v1/trips/{{tripId}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1139,13 +1139,436 @@
                 "api",
                 "v1",
                 "trips",
-                "3"
+                "{{tripId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Trip Plan Without API Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "  pm.expect(pm.response.code).to.eql(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Missing API key gives correct error\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.success).to.eql(false);\r",
+                  "  pm.expect(jsonData.message).to.eql(\"API key is required\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/trip-plan/{{tripId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "v1",
+                "trip-plan",
+                "{{tripId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Trip Plan With Wrong API Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {\r",
+                  "  pm.expect(pm.response.code).to.eql(401);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Wrong API key gives correct error\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.success).to.eql(false);\r",
+                  "  pm.expect(jsonData.message).to.eql(\"Invalid API key\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "wrongapikey",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/trip-plan/{{tripId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "v1",
+                "trip-plan",
+                "{{tripId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Trip Plan Invalid Trip ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {\r",
+                  "  pm.expect(pm.response.code).to.eql(400);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Invalid trip ID gives correct error\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.success).to.eql(false);\r",
+                  "  pm.expect(jsonData.message).to.eql(\"Trip ID must be a positive number\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "40VWa1m0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/trip-plan/abc",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "v1",
+                "trip-plan",
+                "abc"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Trip Plan Trip Not Found",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "40VWa1m0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/trip-plan/999",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "v1",
+                "trip-plan",
+                "999"
               ]
             }
           },
           "response": []
         }
       ]
+    },
+    {
+      "name": "Self API Trip Plan",
+      "item": [
+        {
+          "name": "Generate API Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {\r",
+                  "  pm.expect(pm.response.code).to.eql(201);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"API key generated successfully\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.success).to.eql(true);\r",
+                  "  pm.expect(jsonData.data.apiKey).to.exist;\r",
+                  "  pm.expect(jsonData.data.expiresAt).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"API key length is between 5 and 10 characters\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.data.apiKey.length).to.be.within(5, 10);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Save API key to collection variable\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.collectionVariables.set(\"apiKey\", jsonData.data.apiKey);\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/api-keys",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "v1",
+                "api-keys"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get API Key Records",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "  pm.expect(pm.response.code).to.eql(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"API key records retrieved successfully\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.success).to.eql(true);\r",
+                  "  pm.expect(jsonData.data).to.be.an(\"array\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"API key records do not expose plain API key\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  if (jsonData.data.length > 0) {\r",
+                  "    pm.expect(jsonData.data[0].apiKey).to.be.undefined;\r",
+                  "    pm.expect(jsonData.data[0].expiresAt).to.exist;\r",
+                  "  }\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/api-keys",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "v1",
+                "api-keys"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Trip Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {\r",
+                  "  pm.expect(pm.response.code).to.eql(200);\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Trip plan generated successfully\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.success).to.eql(true);\r",
+                  "  pm.expect(jsonData.message).to.eql(\"Trip plan generated successfully\");\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Trip plan has all main sections\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.data.trip).to.exist;\r",
+                  "  pm.expect(jsonData.data.weather).to.exist;\r",
+                  "  pm.expect(jsonData.data.travelSummary).to.exist;\r",
+                  "  pm.expect(jsonData.data.packingChecklist).to.exist;\r",
+                  "});\r",
+                  "\r",
+                  "pm.test(\"Packing checklist is an array\", function () {\r",
+                  "  const jsonData = pm.response.json();\r",
+                  "\r",
+                  "  pm.expect(jsonData.data.packingChecklist).to.be.an(\"array\");\r",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "40VWa1m0",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/trip-plan/{{tripId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "v1",
+                "trip-plan",
+                "{{tripId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Packing List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{userToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "dDiiKp40",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3000/api/v1/packing-list/{{tripId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "v1",
+                "packing-list",
+                "{{tripId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "apiKey",
+      "value": ""
     }
   ]
 }
